@@ -17,7 +17,7 @@ namespace ftxui {
 TEST(TextAreaTest, Init) {
   std::string content;
   auto option = TextAreaOption();
-  Component input = TextArea(&content, &option);
+  Component textarea = TextArea(&content, &option);
 
   EXPECT_EQ(option.cursor_column(), 0);
   EXPECT_EQ(option.cursor_line(), 0);
@@ -27,29 +27,29 @@ TEST(TextAreaTest, Type) {
   std::string content;
   std::string placeholder;
   auto option = TextAreaOption();
-  Component input = TextArea(&content, &option);
+  Component textarea = TextArea(&content, &option);
 
-  input->OnEvent(Event::Character("a"));
+  textarea->OnEvent(Event::Character("a"));
   EXPECT_EQ(content, "a");
   EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 1u);
 
-  input->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('b'));
   EXPECT_EQ(content, "ab");
   EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 2u);
   
-  input->OnEvent(Event::Return);
+  textarea->OnEvent(Event::Return);
   EXPECT_EQ(content, "ab\n");
   EXPECT_EQ(option.cursor_line(), 1u);
   EXPECT_EQ(option.cursor_column(), 0u);
 
-  input->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::Character('c'));
   EXPECT_EQ(content, "ab\nc");
   EXPECT_EQ(option.cursor_line(), 1u);
   EXPECT_EQ(option.cursor_column(), 1u);
 
-  auto document = input->Render();
+  auto document = textarea->Render();
   //auto screen = Screen::Create(Dimension::Fit(document));
   auto screen = Screen::Create(Dimension::Fixed(10), Dimension::Fixed(2));
   Render(screen, document);
@@ -59,71 +59,45 @@ TEST(TextAreaTest, Type) {
   EXPECT_EQ(screen.PixelAt(1, 1).character, " ");
 }
 
-TEST(TextAreaTest, TypePassword) {
+TEST(TextAreaTest, Arrow1) {
   std::string content;
-  std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 0;
-  option.password = true;
-  Component input = Input(&content, &placeholder, &option);
-
-  input->OnEvent(Event::Character('a'));
-  EXPECT_EQ(content, "a");
-  EXPECT_EQ(option.cursor_position(), 1u);
-
-  input->OnEvent(Event::Character('b'));
-  EXPECT_EQ(content, "ab");
-  EXPECT_EQ(option.cursor_position(), 2u);
-
-  auto document = input->Render();
-  auto screen = Screen::Create(Dimension::Fit(document));
-  Render(screen, document);
-  EXPECT_EQ(screen.PixelAt(0, 0).character, "•");
-  EXPECT_EQ(screen.PixelAt(1, 0).character, "•");
-}
-
-TEST(TextAreaTest, Arrow) {
-  std::string content;
-  std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 0;
-  auto input = Input(&content, &placeholder, &option);
+  auto option = TextAreaOption();
+  auto input = TextArea(&content, &option);
 
   input->OnEvent(Event::Character('a'));
   input->OnEvent(Event::Character('b'));
   input->OnEvent(Event::Character('c'));
 
-  EXPECT_EQ(option.cursor_position(), 3u);
+  EXPECT_EQ(option.cursor_column(), 3u);
 
   input->OnEvent(Event::ArrowLeft);
-  EXPECT_EQ(option.cursor_position(), 2u);
+  EXPECT_EQ(option.cursor_column(), 2u);
 
   input->OnEvent(Event::ArrowLeft);
-  EXPECT_EQ(option.cursor_position(), 1u);
+  EXPECT_EQ(option.cursor_column(), 1u);
 
   input->OnEvent(Event::ArrowLeft);
-  EXPECT_EQ(option.cursor_position(), 0u);
+  EXPECT_EQ(option.cursor_column(), 0u);
 
   input->OnEvent(Event::ArrowLeft);
-  EXPECT_EQ(option.cursor_position(), 0u);
+  EXPECT_EQ(option.cursor_column(), 0u);
 
   input->OnEvent(Event::ArrowRight);
-  EXPECT_EQ(option.cursor_position(), 1u);
+  EXPECT_EQ(option.cursor_column(), 1u);
 
   input->OnEvent(Event::ArrowRight);
-  EXPECT_EQ(option.cursor_position(), 2u);
+  EXPECT_EQ(option.cursor_column(), 2u);
 
   input->OnEvent(Event::ArrowRight);
-  EXPECT_EQ(option.cursor_position(), 3u);
+  EXPECT_EQ(option.cursor_column(), 3u);
 
   input->OnEvent(Event::ArrowRight);
-  EXPECT_EQ(option.cursor_position(), 3u);
+  EXPECT_EQ(option.cursor_column(), 3u);
 }
 
 TEST(TextAreaTest, Insert) {
   std::string content;
-  std::string placeholder;
-  Component input = Input(&content, &placeholder);
+  Component input = TextArea(&content);
 
   input->OnEvent(Event::Character('a'));
   input->OnEvent(Event::Character('b'));
@@ -148,22 +122,26 @@ TEST(TextAreaTest, Insert) {
 
 TEST(TextAreaTest, Home) {
   std::string content;
-  std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 0;
-  auto input = Input(&content, &placeholder, &option);
+  auto option = TextAreaOption();
+  auto input = TextArea(&content, &option);
 
   input->OnEvent(Event::Character('a'));
   input->OnEvent(Event::Character('b'));
   input->OnEvent(Event::Character('c'));
-  EXPECT_EQ(content, "abc");
+  input->OnEvent(Event::Return);
+  input->OnEvent(Event::Character('a'));
+  input->OnEvent(Event::Character('b'));
+  input->OnEvent(Event::Character('c'));
+  EXPECT_EQ(content, "abc\nabc");
+  EXPECT_EQ(option.cursor_row(), 2u);
+  EXPECT_EQ(option.cursor_column(), 3u);
 
-  EXPECT_EQ(option.cursor_position(), 3u);
   input->OnEvent(Event::Home);
-  EXPECT_EQ(option.cursor_position(), 0u);
+  EXPECT_EQ(option.cursor_row(), 0u);
+  EXPECT_EQ(option.cursor_column(), 0u);
 
   input->OnEvent(Event::Character('-'));
-  EXPECT_EQ(content, "-abc");
+  EXPECT_EQ(content, "-abc\nabc");
 }
 
 TEST(TextAreaTest, End) {
@@ -499,6 +477,30 @@ TEST(TextAreaTest, CtrlArrowRight2) {
   EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
   EXPECT_EQ(option.cursor_position(), 34u);
 }
+
+TEST(TextAreaTest, TypePassword) {
+  std::string content;
+  std::string placeholder;
+  auto option = InputOption();
+  option.cursor_position = 0;
+  option.password = true;
+  Component input = Input(&content, &placeholder, &option);
+
+  input->OnEvent(Event::Character('a'));
+  EXPECT_EQ(content, "a");
+  EXPECT_EQ(option.cursor_position(), 1u);
+
+  input->OnEvent(Event::Character('b'));
+  EXPECT_EQ(content, "ab");
+  EXPECT_EQ(option.cursor_position(), 2u);
+
+  auto document = input->Render();
+  auto screen = Screen::Create(Dimension::Fit(document));
+  Render(screen, document);
+  EXPECT_EQ(screen.PixelAt(0, 0).character, "•");
+  EXPECT_EQ(screen.PixelAt(1, 0).character, "•");
+}
+
 
 }  // namespace ftxui
 
