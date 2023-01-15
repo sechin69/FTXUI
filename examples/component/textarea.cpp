@@ -12,8 +12,21 @@
 int main(int argc, const char* argv[]) {
   using namespace ftxui;
 
-  std::string content;
-  auto component = TextArea(&content) | border;
+  std::string content_1;
+  std::string content_2;
+  auto textarea_1 = TextArea(&content_1);
+  auto textarea_2 = TextArea(&content_2);
+  int size = 50;
+  auto layout = ResizableSplitLeft(textarea_1, textarea_2, &size);
+
+  auto component = Renderer(layout, [&] {
+    return vbox({
+               text("TextArea:"),
+               separator(),
+               layout->Render() | flex,
+           }) |
+           border;
+  });
 
   auto screen = ScreenInteractive::Fullscreen();
   screen.Loop(component);

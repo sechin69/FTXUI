@@ -1,3 +1,4 @@
+#include <iostream>
 // Content of this file was created thanks to:
 // -
 // https://www.unicode.org/Public/UCD/latest/ucd/auxiliary/WordBreakProperty.txt
@@ -1541,7 +1542,7 @@ bool IsControl(uint32_t ucs) {
     return true;
   }
   if (ucs < 32) {  // NOLINT
-    return true;
+    return ucs != 10; // 10 => Line feed.
   }
   if (ucs >= 0x7f && ucs < 0xa0) {  // NOLINT
     return true;

@@ -62,176 +62,240 @@ TEST(TextAreaTest, Type) {
 TEST(TextAreaTest, Arrow1) {
   std::string content;
   auto option = TextAreaOption();
-  auto input = TextArea(&content, &option);
+  auto textarea = TextArea(&content, &option);
 
-  input->OnEvent(Event::Character('a'));
-  input->OnEvent(Event::Character('b'));
-  input->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
 
   EXPECT_EQ(option.cursor_column(), 3u);
 
-  input->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::ArrowLeft);
   EXPECT_EQ(option.cursor_column(), 2u);
 
-  input->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::ArrowLeft);
   EXPECT_EQ(option.cursor_column(), 1u);
 
-  input->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::ArrowLeft);
   EXPECT_EQ(option.cursor_column(), 0u);
 
-  input->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::ArrowLeft);
   EXPECT_EQ(option.cursor_column(), 0u);
 
-  input->OnEvent(Event::ArrowRight);
+  textarea->OnEvent(Event::ArrowRight);
   EXPECT_EQ(option.cursor_column(), 1u);
 
-  input->OnEvent(Event::ArrowRight);
+  textarea->OnEvent(Event::ArrowRight);
   EXPECT_EQ(option.cursor_column(), 2u);
 
-  input->OnEvent(Event::ArrowRight);
+  textarea->OnEvent(Event::ArrowRight);
   EXPECT_EQ(option.cursor_column(), 3u);
 
-  input->OnEvent(Event::ArrowRight);
+  textarea->OnEvent(Event::ArrowRight);
   EXPECT_EQ(option.cursor_column(), 3u);
 }
 
 TEST(TextAreaTest, Insert) {
   std::string content;
-  Component input = TextArea(&content);
+  Component textarea = TextArea(&content);
 
-  input->OnEvent(Event::Character('a'));
-  input->OnEvent(Event::Character('b'));
-  input->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
   EXPECT_EQ(content, "abc");
 
-  input->OnEvent(Event::ArrowLeft);
-  input->OnEvent(Event::ArrowLeft);
-  input->OnEvent(Event::Character('-'));
+  textarea->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::Character('-'));
   EXPECT_EQ(content, "a-bc");
 
-  input->OnEvent(Event::ArrowLeft);
-  input->OnEvent(Event::Character('-'));
+  textarea->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::Character('-'));
   EXPECT_EQ(content, "a--bc");
 
-  input->OnEvent(Event::ArrowLeft);
-  input->OnEvent(Event::ArrowLeft);
-  input->OnEvent(Event::ArrowLeft);
-  input->OnEvent(Event::Character('-'));
+  textarea->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::Character('-'));
   EXPECT_EQ(content, "-a--bc");
 }
 
 TEST(TextAreaTest, Home) {
   std::string content;
   auto option = TextAreaOption();
-  auto input = TextArea(&content, &option);
+  auto textarea = TextArea(&content, &option);
 
-  input->OnEvent(Event::Character('a'));
-  input->OnEvent(Event::Character('b'));
-  input->OnEvent(Event::Character('c'));
-  input->OnEvent(Event::Return);
-  input->OnEvent(Event::Character('a'));
-  input->OnEvent(Event::Character('b'));
-  input->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::Return);
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
   EXPECT_EQ(content, "abc\nabc");
-  EXPECT_EQ(option.cursor_row(), 2u);
+  EXPECT_EQ(option.cursor_line(), 1u);
   EXPECT_EQ(option.cursor_column(), 3u);
 
-  input->OnEvent(Event::Home);
-  EXPECT_EQ(option.cursor_row(), 0u);
+  textarea->OnEvent(Event::Home);
+  EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 0u);
 
-  input->OnEvent(Event::Character('-'));
+  textarea->OnEvent(Event::Character('-'));
   EXPECT_EQ(content, "-abc\nabc");
 }
 
 TEST(TextAreaTest, End) {
   std::string content;
   std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 0;
-  auto input = Input(&content, &placeholder, &option);
+  auto option = TextAreaOption();
+  auto textarea = TextArea(&content, &option);
 
-  input->OnEvent(Event::Character('a'));
-  input->OnEvent(Event::Character('b'));
-  input->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::Return);
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::ArrowUp);
+  textarea->OnEvent(Event::ArrowLeft);
+  EXPECT_EQ(content, "abc\nabc");
+  EXPECT_EQ(option.cursor_line(), 0u);
+  EXPECT_EQ(option.cursor_column(), 2u);
 
-  input->OnEvent(Event::ArrowLeft);
-  input->OnEvent(Event::ArrowLeft);
-
-  EXPECT_EQ(option.cursor_position(), 1u);
-  input->OnEvent(Event::End);
-  EXPECT_EQ(option.cursor_position(), 3u);
+  textarea->OnEvent(Event::End);
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 3u);
 }
 
 TEST(TextAreaTest, Delete) {
   std::string content;
   std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 0;
-  auto input = Input(&content, &placeholder, &option);
+  auto option = TextAreaOption();
+  auto textarea = TextArea(&content, &option);
 
-  input->OnEvent(Event::Character('a'));
-  input->OnEvent(Event::Character('b'));
-  input->OnEvent(Event::Character('c'));
-  input->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::Return);
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
 
-  EXPECT_EQ(content, "abc");
-  EXPECT_EQ(option.cursor_position(), 2u);
+  EXPECT_EQ(content, "abc\nabc");
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 3u);
 
-  input->OnEvent(Event::Delete);
+  textarea->OnEvent(Event::Delete);
+  EXPECT_EQ(content, "abc\nabc");
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 3u);
+
+  textarea->OnEvent(Event::ArrowLeft);
+  EXPECT_EQ(content, "abc\nabc");
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 2u);
+
+  textarea->OnEvent(Event::Delete);
+  EXPECT_EQ(content, "abc\nab");
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 2u);
+
+  textarea->OnEvent(Event::ArrowUp);
+  EXPECT_EQ(content, "abc\nab");
+  EXPECT_EQ(option.cursor_line(), 0u);
+  EXPECT_EQ(option.cursor_column(), 2u);
+
+  textarea->OnEvent(Event::Delete);
+  EXPECT_EQ(content, "ab\nab");
+  EXPECT_EQ(option.cursor_line(), 0u);
+  EXPECT_EQ(option.cursor_column(), 2u);
+
+  textarea->OnEvent(Event::Delete);
+  EXPECT_EQ(content, "abab");
+  EXPECT_EQ(option.cursor_line(), 0u);
+  EXPECT_EQ(option.cursor_column(), 2u);
+
+  textarea->OnEvent(Event::Delete);
+  EXPECT_EQ(content, "abb");
+  EXPECT_EQ(option.cursor_line(), 0u);
+  EXPECT_EQ(option.cursor_column(), 2u);
+  
+  textarea->OnEvent(Event::Delete);
   EXPECT_EQ(content, "ab");
-  EXPECT_EQ(option.cursor_position(), 2u);
+  EXPECT_EQ(option.cursor_line(), 0u);
+  EXPECT_EQ(option.cursor_column(), 2u);
 
-  input->OnEvent(Event::Delete);
+  textarea->OnEvent(Event::Delete);
   EXPECT_EQ(content, "ab");
-  EXPECT_EQ(option.cursor_position(), 2u);
+  EXPECT_EQ(option.cursor_line(), 0u);
+  EXPECT_EQ(option.cursor_column(), 2u);
 }
 
 TEST(TextAreaTest, Backspace) {
   std::string content;
   std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 0;
-  auto input = Input(&content, &placeholder, &option);
+  auto option = TextAreaOption();
+  auto textarea = TextArea(&content, &option);
 
-  input->OnEvent(Event::Character('a'));
-  input->OnEvent(Event::Character('b'));
-  input->OnEvent(Event::Character('c'));
-  input->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
+  textarea->OnEvent(Event::Return);
+  textarea->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('c'));
 
-  EXPECT_EQ(content, "abc");
-  EXPECT_EQ(option.cursor_position(), 2u);
+  EXPECT_EQ(content, "abc\nabc");
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 3u);
 
-  input->OnEvent(Event::Backspace);
-  EXPECT_EQ(content, "ac");
-  EXPECT_EQ(option.cursor_position(), 1u);
+  textarea->OnEvent(Event::Backspace);
+  EXPECT_EQ(content, "abc\nab");
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 2u);
 
-  input->OnEvent(Event::Backspace);
-  EXPECT_EQ(content, "c");
-  EXPECT_EQ(option.cursor_position(), 0u);
+  textarea->OnEvent(Event::ArrowLeft);
+  EXPECT_EQ(content, "abc\nab");
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 1u);
 
-  input->OnEvent(Event::Backspace);
-  EXPECT_EQ(content, "c");
-  EXPECT_EQ(option.cursor_position(), 0u);
+  textarea->OnEvent(Event::Backspace);
+  EXPECT_EQ(content, "abc\nb");
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 0u);
+
+  textarea->OnEvent(Event::ArrowLeft);
+  textarea->OnEvent(Event::Backspace);
+  EXPECT_EQ(content, "abcb");
+  EXPECT_EQ(option.cursor_line(), 0u);
+  EXPECT_EQ(option.cursor_column(), 3u);
 }
 
 TEST(TextAreaTest, MouseClick) {
   std::string content;
   std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 0;
-  auto input = Input(&content, &placeholder, &option);
+  auto option = TextAreaOption();
+  auto textarea = TextArea(&content, &option);
 
-  input->OnEvent(Event::Character("a"));
-  input->OnEvent(Event::Character("b"));
-  input->OnEvent(Event::Character("c"));
-  input->OnEvent(Event::Character("d"));
+  textarea->OnEvent(Event::Character("a"));
+  textarea->OnEvent(Event::Character("b"));
+  textarea->OnEvent(Event::Character("c"));
+  textarea->OnEvent(Event::Character("d"));
+  textarea->OnEvent(Event::Return);
+  textarea->OnEvent(Event::Character("a"));
+  textarea->OnEvent(Event::Character("b"));
+  textarea->OnEvent(Event::Character("c"));
+  textarea->OnEvent(Event::Character("d"));
+  textarea->OnEvent(Event::Return);
 
-  EXPECT_EQ(option.cursor_position(), 4u);
+  EXPECT_EQ(content, "abcd\nabcd\n");
+  EXPECT_EQ(option.cursor_column(), 0u);
+  EXPECT_EQ(option.cursor_line(), 2u);
 
   auto render = [&] {
-    auto document = input->Render();
-    auto screen = Screen::Create(Dimension::Fixed(10), Dimension::Fixed(1));
+    auto document = textarea->Render();
+    auto screen = Screen::Create(Dimension::Fixed(10), Dimension::Fixed(0));
     Render(screen, document);
   };
   render();
@@ -239,45 +303,46 @@ TEST(TextAreaTest, MouseClick) {
   Mouse mouse;
   mouse.button = Mouse::Button::Left;
   mouse.motion = Mouse::Motion::Pressed;
+  mouse.x = 0;
   mouse.y = 0;
   mouse.shift = false;
   mouse.meta = false;
   mouse.control = false;
 
   mouse.x = 0;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
-  EXPECT_EQ(option.cursor_position(), 0u);
+  EXPECT_EQ(option.cursor_column(), 0u);
 
   mouse.x = 2;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
-  EXPECT_EQ(option.cursor_position(), 2u);
+  EXPECT_EQ(option.cursor_column(), 2u);
 
   mouse.x = 2;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
-  EXPECT_EQ(option.cursor_position(), 2u);
+  EXPECT_EQ(option.cursor_column(), 2u);
 
   mouse.x = 1;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
-  EXPECT_EQ(option.cursor_position(), 1u);
+  EXPECT_EQ(option.cursor_column(), 1u);
 
   mouse.x = 3;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
-  EXPECT_EQ(option.cursor_position(), 3u);
+  EXPECT_EQ(option.cursor_column(), 3u);
 
   mouse.x = 4;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
-  EXPECT_EQ(option.cursor_position(), 4u);
+  EXPECT_EQ(option.cursor_column(), 4u);
 
   mouse.x = 5;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
-  EXPECT_EQ(option.cursor_position(), 4u);
+  EXPECT_EQ(option.cursor_column(), 4u);
 }
 
 TEST(TextAreaTest, MouseClickComplex) {
@@ -285,17 +350,17 @@ TEST(TextAreaTest, MouseClickComplex) {
   std::string placeholder;
   auto option = InputOption();
   option.cursor_position = 0;
-  auto input = Input(&content, &placeholder, &option);
+  auto textarea = Input(&content, &placeholder, &option);
 
-  input->OnEvent(Event::Character("测"));
-  input->OnEvent(Event::Character("试"));
-  input->OnEvent(Event::Character("a⃒"));
-  input->OnEvent(Event::Character("ā"));
+  textarea->OnEvent(Event::Character("测"));
+  textarea->OnEvent(Event::Character("试"));
+  textarea->OnEvent(Event::Character("a⃒"));
+  textarea->OnEvent(Event::Character("ā"));
 
   EXPECT_EQ(option.cursor_position(), 4u);
 
   auto render = [&] {
-    auto document = input->Render();
+    auto document = textarea->Render();
     auto screen = Screen::Create(Dimension::Fixed(10), Dimension::Fixed(1));
     Render(screen, document);
   };
@@ -310,172 +375,236 @@ TEST(TextAreaTest, MouseClickComplex) {
   mouse.control = false;
 
   mouse.x = 0;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 0u);
 
   mouse.x = 0;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 0u);
 
   mouse.x = 1;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 0u);
 
   mouse.x = 1;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 0u);
 
   mouse.x = 2;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 1u);
 
   mouse.x = 2;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 1u);
 
   mouse.x = 1;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 0u);
 
   mouse.x = 4;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 2u);
 
   mouse.x = 5;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 3u);
 
   mouse.x = 6;
-  input->OnEvent(Event::Mouse("", mouse));
+  textarea->OnEvent(Event::Mouse("", mouse));
   render();
   EXPECT_EQ(option.cursor_position(), 4u);
 }
 
 TEST(TextAreaTest, CtrlArrowLeft) {
-  std::string content = "word word 测ord wo测d word";
-  //                     0    5    10    15    20
+  std::string content =
+      "word word 测ord wo测d word\n"
+      "coucou coucou coucou\n"
+      "coucou coucou coucou\n";
   std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 22;
-  auto input = Input(&content, &placeholder, &option);
+  auto option = TextAreaOption();
+  option.cursor_column = 22;
+  option.cursor_line = 3;
+  auto textarea = TextArea(&content, &option);
 
   // Use CTRL+Left several time
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 20u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 2);
+  EXPECT_EQ(option.cursor_column(), 20u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 15u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 2);
+  EXPECT_EQ(option.cursor_column(), 14u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 10u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 2);
+  EXPECT_EQ(option.cursor_column(), 7u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 5u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 2);
+  EXPECT_EQ(option.cursor_column(), 0u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 0u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 1);
+  EXPECT_EQ(option.cursor_column(), 20u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 0u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 1);
+  EXPECT_EQ(option.cursor_column(), 14u);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 1);
+  EXPECT_EQ(option.cursor_column(), 7u);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 1);
+  EXPECT_EQ(option.cursor_column(), 0u);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 0);
+  EXPECT_EQ(option.cursor_column(), 24u);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 0);
+  EXPECT_EQ(option.cursor_column(), 20u);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 0);
+  EXPECT_EQ(option.cursor_column(), 15u);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 0);
+  EXPECT_EQ(option.cursor_column(), 10u);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 0);
+  EXPECT_EQ(option.cursor_column(), 5u);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 0);
+  EXPECT_EQ(option.cursor_column(), 0u);
+
+  EXPECT_FALSE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_line(), 0);
+  EXPECT_EQ(option.cursor_column(), 0u);
 }
 
 TEST(TextAreaTest, CtrlArrowLeft2) {
-  std::string content = "   word  word  测ord  wo测d  word   ";
-  //                     0  3  6  9 12  15  18 21  24 27 30 33
-  std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 33;
-  auto input = Input(&content, &placeholder, &option);
+  std::string content =
+    "   word  word  测ord  wo测d  word   ";
+  auto option = TextAreaOption();
+  option.cursor_column = 33;
+  auto textarea = TextArea(&content, &option);
 
   // Use CTRL+Left several time
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 27u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_column(), 27u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 21u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_column(), 21u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 15u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_column(), 15u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 9u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_column(), 9u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 3u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_column(), 3u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 0u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_column(), 0u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowLeftCtrl));
-  EXPECT_EQ(option.cursor_position(), 0u);
+  EXPECT_FALSE(textarea->OnEvent(Event::ArrowLeftCtrl));
+  EXPECT_EQ(option.cursor_column(), 0u);
 }
 
 TEST(TextAreaTest, CtrlArrowRight) {
-  std::string content = "word word 测ord wo测d word";
-  //                     0    5    10    15    20
-  std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 2;
-  auto input = Input(&content, &placeholder, &option);
+  std::string content =
+      "word word 测ord wo测d word\n"
+      "coucou dfqdsf jmlkjm";
+
+  auto option = TextAreaOption();
+  option.cursor_column = 2;
+  auto textarea = TextArea(&content, &option);
 
   // Use CTRL+Left several time
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 4);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 4);
+  EXPECT_EQ(option.cursor_line(), 0);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 9);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 9);
+  EXPECT_EQ(option.cursor_line(), 0);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 14u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 14u);
+  EXPECT_EQ(option.cursor_line(), 0);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 19u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 19u);
+  EXPECT_EQ(option.cursor_line(), 0);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 24u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 24u);
+  EXPECT_EQ(option.cursor_line(), 0);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 24u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 0u);
+  EXPECT_EQ(option.cursor_line(), 1);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 6u);
+  EXPECT_EQ(option.cursor_line(), 1);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 13u);
+  EXPECT_EQ(option.cursor_line(), 1);
+
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 20u);
+  EXPECT_EQ(option.cursor_line(), 1);
+
+  EXPECT_FALSE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 20u);
+  EXPECT_EQ(option.cursor_line(), 1);
 }
 
 TEST(TextAreaTest, CtrlArrowRight2) {
   std::string content = "   word  word  测ord  wo测d  word   ";
-  //                     0  3  6  9 12  15  18 21  24 27 30 33
-  std::string placeholder;
-  auto option = InputOption();
-  option.cursor_position = 0;
-  auto input = Input(&content, &placeholder, &option);
+  auto option = TextAreaOption();
+  auto textarea = TextArea(&content, &option);
 
   // Use CTRL+Left several time
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 7u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 7u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 13u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 13u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 19u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 19u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 25u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 25u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 31u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 31u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 34u);
+  EXPECT_TRUE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 34u);
 
-  EXPECT_TRUE(input->OnEvent(Event::ArrowRightCtrl));
-  EXPECT_EQ(option.cursor_position(), 34u);
+  EXPECT_FALSE(textarea->OnEvent(Event::ArrowRightCtrl));
+  EXPECT_EQ(option.cursor_column(), 34u);
 }
 
 TEST(TextAreaTest, TypePassword) {
@@ -484,17 +613,17 @@ TEST(TextAreaTest, TypePassword) {
   auto option = InputOption();
   option.cursor_position = 0;
   option.password = true;
-  Component input = Input(&content, &placeholder, &option);
+  Component textarea = Input(&content, &placeholder, &option);
 
-  input->OnEvent(Event::Character('a'));
+  textarea->OnEvent(Event::Character('a'));
   EXPECT_EQ(content, "a");
   EXPECT_EQ(option.cursor_position(), 1u);
 
-  input->OnEvent(Event::Character('b'));
+  textarea->OnEvent(Event::Character('b'));
   EXPECT_EQ(content, "ab");
   EXPECT_EQ(option.cursor_position(), 2u);
 
-  auto document = input->Render();
+  auto document = textarea->Render();
   auto screen = Screen::Create(Dimension::Fit(document));
   Render(screen, document);
   EXPECT_EQ(screen.PixelAt(0, 0).character, "•");

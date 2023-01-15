@@ -135,7 +135,7 @@ TEST(StringTest, Utf8ToWordBreakProperty) {
   EXPECT_EQ(Utf8ToWordBreakProperty(":"), T({P::MidLetter}));
   EXPECT_EQ(Utf8ToWordBreakProperty("."), T({P::MidNumLet}));
   EXPECT_EQ(Utf8ToWordBreakProperty("\r"), T({}));  // FIXME
-  EXPECT_EQ(Utf8ToWordBreakProperty("\n"), T({}));  // FIXME
+  EXPECT_EQ(Utf8ToWordBreakProperty("\n"), T({P::LF}));
 }
 
 TEST(StringTest, to_string) {

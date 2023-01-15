@@ -30,38 +30,41 @@ std::vector<std::string> Split(const std::string& input) {
   while (std::getline(ss, line)) {
     output.push_back(line);
   }
+  if (input.back() == '\n') {
+    output.push_back("");
+  }
   return output;
 }
 
 // Group together several propertiej so they appear to form a similar group.
 // For instance, letters are grouped with number and form a single word.
-//bool IsWordCharacter(WordBreakProperty property) {
-  //switch (property) {
-    //case WordBreakProperty::ALetter:
-    //case WordBreakProperty::Hebrew_Letter:
-    //case WordBreakProperty::Katakana:
-    //case WordBreakProperty::Numeric:
-      //return true;
+bool IsWordCharacter(WordBreakProperty property) {
+  switch (property) {
+    case WordBreakProperty::ALetter:
+    case WordBreakProperty::Hebrew_Letter:
+    case WordBreakProperty::Katakana:
+    case WordBreakProperty::Numeric:
+      return true;
 
-    //case WordBreakProperty::CR:
-    //case WordBreakProperty::Double_Quote:
-    //case WordBreakProperty::LF:
-    //case WordBreakProperty::MidLetter:
-    //case WordBreakProperty::MidNum:
-    //case WordBreakProperty::MidNumLet:
-    //case WordBreakProperty::Newline:
-    //case WordBreakProperty::Single_Quote:
-    //case WordBreakProperty::WSegSpace:
-    //// Unsure:
-    //case WordBreakProperty::Extend:
-    //case WordBreakProperty::ExtendNumLet:
-    //case WordBreakProperty::Format:
-    //case WordBreakProperty::Regional_Indicator:
-    //case WordBreakProperty::ZWJ:
-      //return false;
-  //}
-  //return true;  // NOT_REACHED();
-//}
+    case WordBreakProperty::CR:
+    case WordBreakProperty::Double_Quote:
+    case WordBreakProperty::LF:
+    case WordBreakProperty::MidLetter:
+    case WordBreakProperty::MidNum:
+    case WordBreakProperty::MidNumLet:
+    case WordBreakProperty::Newline:
+    case WordBreakProperty::Single_Quote:
+    case WordBreakProperty::WSegSpace:
+    // Unsure:
+    case WordBreakProperty::Extend:
+    case WordBreakProperty::ExtendNumLet:
+    case WordBreakProperty::Format:
+    case WordBreakProperty::Regional_Indicator:
+    case WordBreakProperty::ZWJ:
+      return false;
+  }
+  return true;  // NOT_REACHED();
+}
 
 //std::string PasswordField(size_t size) {
   //std::string out;
@@ -83,6 +86,28 @@ class TextAreaBase : public ComponentBase {
   Element Render() override {
     Elements lines;
     std::vector<std::string> content_lines = Split(*content_);
+
+    // Fix cursor_line/cursor_column
+    {
+      int& cursor_line = option_->cursor_line();
+      int& cursor_column = option_->cursor_column();
+      cursor_line =
+          std::max(std::min(cursor_line, (int)content_lines.size()), 0);
+      std::string empty_string;
+      const std::string& line = cursor_line < (int)content_lines.size()
+                                    ? content_lines[cursor_line]
+                                    : empty_string;
+      cursor_column = std::max(std::min(cursor_column, (int)line.size()), 0);
+    }
+
+    const bool is_focused = Focused();
+    const auto focused =
+        (is_focused || hovered_) ? focusCursorBarBlinking : select;
+
+    if (content_lines.empty()) {
+      lines.push_back(text("") | focused);
+    }
+
     for (size_t i = 0; i < content_lines.size(); ++i) {
       if (int(i) != *(option_->cursor_line)) {
         lines.push_back(text(content_lines[i]));
@@ -94,55 +119,31 @@ class TextAreaBase : public ComponentBase {
       int& cursor_column = *(option_->cursor_column);
       cursor_column = std::max(0, std::min<int>(size, cursor_column));
 
-      const bool is_focused = Focused();
-
-      // placeholder.
-      if (size == 0) {
-        auto element = text(*(option_->placeholder)) | dim | reflect(box_);
-        if (is_focused) {
-          element |= focus;
-        }
-        if (hovered_ || is_focused) {
-          element |= inverted;
-        }
-        lines.push_back(element);
-        continue;
-      }
-
-      // Not focused.
-      if (!is_focused) {
-        auto element = text(content_lines[i]) | reflect(box_);
-        if (hovered_) {
-          element |= inverted;
-        }
-        lines.push_back(std::move(element));
-        continue;
-      }
-
       const int index_before_cursor =
           GlyphPosition(content_lines[i], cursor_column);
       const int index_after_cursor =
           GlyphPosition(content_lines[i], 1, index_before_cursor);
       const std::string part_before_cursor =
           content_lines[i].substr(0, index_before_cursor);
-      std::string part_at_cursor = " ";
+      std::string part_at_cursor = "";
       if (cursor_column < size) {
         part_at_cursor = content_lines[i].substr(
             index_before_cursor, index_after_cursor - index_before_cursor);
       }
       const std::string part_after_cursor =
           content_lines[i].substr(index_after_cursor);
-      auto focused = (is_focused || hovered_) ? focusCursorBarBlinking : select;
       auto element = hbox({
                          text(part_before_cursor),
                          text(part_at_cursor) | focused | reflect(cursor_box_),
                          text(part_after_cursor),
                      }) |
-                     xflex | frame | bold | reflect(box_);
+                     xflex;
       lines.push_back(element);
     }
-    lines.push_back(text("end") | flex);
-    return vbox(std::move(lines));
+
+    return vbox(std::move(lines))  //
+           | frame                 //
+           | reflect(box_);        //
   }
 
   bool OnEvent(Event event) override {
@@ -161,14 +162,26 @@ class TextAreaBase : public ComponentBase {
     cursor_column = std::max(std::min(cursor_column, (int)line.size()), 0);
 
     if (event.is_mouse()) {
-      return OnMouseEvent(event);
+      return OnMouseEvent(event, content_lines);
     }
 
     // Backspace.
     if (event == Event::Backspace) {
-      if (cursor_column == 0) {
+      // On the very first character, there is nothing to be deleted:
+      if (cursor_line == 0 && cursor_column == 0) {
         return false;
       }
+
+      // On the very first character of a line, it causes the newline character
+      // to be deleted, and the two lines to be merged.
+      if (cursor_column == 0) {
+        cursor_line--;
+        cursor_column = GlyphCount(content_lines[cursor_line]);
+        content_->erase(line_start_position - 1, 1);
+        return true;
+      }
+
+      // Otherwise, we deleting inside the line, one glyph on the left:
       const size_t start =
           GlyphPosition(*content_, cursor_column - 1, line_start_position);
       const size_t end =
@@ -181,11 +194,26 @@ class TextAreaBase : public ComponentBase {
 
     // Delete
     if (event == Event::Delete) {
-      if (cursor_column == int(content_->size())) {
+      // After the last row, there is nothing to be deleted:
+      if (cursor_line == int(content_->size())) {
         return false;
       }
-      const size_t start = GlyphPosition(*content_, cursor_column);
-      const size_t end = GlyphPosition(*content_, cursor_column + 1);
+
+      // On the last column, deletion the newline character to be deleted and
+      // the two lines merged.
+      if (cursor_column == (int)content_lines[cursor_line].size()) {
+        // On the last row. There are nothing to be deleted:
+        if (cursor_line == (int)content_lines.size() - 1) {
+          return false;
+        }
+        const size_t start =
+            GlyphPosition(*content_, cursor_column, line_start_position);
+        content_->erase(start, 1);
+        return true;
+      }
+      const size_t start =
+          GlyphPosition(*content_, cursor_column, line_start_position);
+      const size_t end = GlyphPosition(*content_, 1, start);
       content_->erase(start, end - start);
       option_->on_change();
       return true;
@@ -202,7 +230,8 @@ class TextAreaBase : public ComponentBase {
       return true;
     }
 
-    if (event == Event::ArrowDown && cursor_line < (int)content_lines.size()) {
+    if (event == Event::ArrowDown &&
+        cursor_line < (int)content_lines.size() - 1) {
       cursor_line++;
       return true;
     }
@@ -220,12 +249,10 @@ class TextAreaBase : public ComponentBase {
 
     // CTRL + Arrow:
     if (event == Event::ArrowLeftCtrl) {
-      HandleLeftCtrl();
-      return true;
+      return HandleLeftCtrl(content_lines);
     }
     if (event == Event::ArrowRightCtrl) {
-      HandleRightCtrl();
-      return true;
+      return HandleRightCtrl(content_lines);
     }
 
     if (event == Event::Home) {
@@ -235,7 +262,8 @@ class TextAreaBase : public ComponentBase {
     }
 
     if (event == Event::End) {
-      //cursor_position() = GlyphCount(*content_);
+      cursor_line = content_lines.size() - 1;
+      cursor_column = content_lines.back().size();
       return true;
     }
 
@@ -263,40 +291,65 @@ class TextAreaBase : public ComponentBase {
   }
 
  private:
-  void HandleLeftCtrl() {
-    auto properties = Utf8ToWordBreakProperty(*content_);
 
-    //// Move left, as long as left is not a word character.
-    //while (cursor_position() > 0 &&
-           //!IsWordCharacter(properties[cursor_position() - 1])) {
-      //cursor_position()--;
-    //}
+  bool HandleLeftCtrl(const std::vector<std::string>& lines) {
+    int& cursor_line = option_->cursor_line();
+    int& cursor_column = option_->cursor_column();
+    if (cursor_column == 0) {
+      if (cursor_line == 0) {
+        return false;
+      }
+      cursor_line--;
+      cursor_column = GlyphCount(lines[cursor_line]);
+      return true;
+    }
 
-    //// Move left, as long as left is a word character:
-    //while (cursor_position() > 0 &&
-           //IsWordCharacter(properties[cursor_position() - 1])) {
-      //cursor_position()--;
-    //}
+    auto properties = Utf8ToWordBreakProperty(lines[cursor_line]);
+
+    // Move left, as long as left is not a word character.
+    while (cursor_column > 0 &&
+           !IsWordCharacter(properties[cursor_column - 1])) {
+      cursor_column--;
+    }
+
+    // Move left, as long as left is a word character:
+    while (cursor_column > 0 &&
+           IsWordCharacter(properties[cursor_column - 1])) {
+      cursor_column--;
+    }
+    return true;
   }
 
-  void HandleRightCtrl() {
-    //auto properties = Utf8ToWordBreakProperty(*content_);
-    //const int max = (int)properties.size();
+  bool HandleRightCtrl(const std::vector<std::string>& lines) {
+    int& cursor_line = option_->cursor_line();
+    int& cursor_column = option_->cursor_column();
+    if (cursor_column >= GlyphCount(lines[cursor_line])) {
+      if (cursor_line >= (int)lines.size() - 1) {
+        return false;
+      }
+      cursor_line++;
+      cursor_column = 0;
+      return true;
+    }
 
-    //// Move right, as long as right is not a word character.
-    //while (cursor_position() < max &&
-           //!IsWordCharacter(properties[cursor_position()])) {
-      //cursor_position()++;
-    //}
+    auto properties = Utf8ToWordBreakProperty(lines[cursor_line]);
+    const int max = (int)properties.size();
 
-    //// Move right, as long as right is a word character:
-    //while (cursor_position() < max &&
-           //IsWordCharacter(properties[cursor_position()])) {
-      //cursor_position()++;
-    //}
+    // Move right, as long as right is not a word character.
+    while (cursor_column < max &&
+           !IsWordCharacter(properties[cursor_column])) {
+      cursor_column++;
+    }
+
+    // Move right, as long as right is a word character:
+    while (cursor_column < max &&
+           IsWordCharacter(properties[cursor_column])) {
+      cursor_column++;
+    }
+    return true;
   }
 
-  bool OnMouseEvent(Event event) {
+  bool OnMouseEvent(Event event, const std::vector<std::string>& lines) {
     hovered_ =
         box_.Contain(event.mouse().x, event.mouse().y) && CaptureMouse(event);
     if (!hovered_) {
@@ -309,32 +362,28 @@ class TextAreaBase : public ComponentBase {
     }
 
     TakeFocus();
-    if (content_->empty()) {
-      return true;
+
+    int& cursor_line = option_->cursor_line();
+    int& cursor_column = option_->cursor_column();
+
+    int new_cursor_column = cursor_column + event.mouse().x - cursor_box_.x_min;
+    int new_cursor_line = cursor_line + event.mouse().y - cursor_box_.y_min;
+
+    new_cursor_line = std::max(std::min(new_cursor_line, (int)lines.size()), 0);
+    std::string empty_string;
+    const std::string& line = new_cursor_line < (int)lines.size()
+                                  ? lines[new_cursor_line]
+                                  : empty_string;
+    new_cursor_column =
+        std::max(std::min(new_cursor_column, (int)line.size()), 0);
+
+    if (new_cursor_column == cursor_column && new_cursor_line == cursor_line) {
+      return false;
     }
 
-    //auto mapping = CellToGlyphIndex(*content_);
-    //int original_glyph = cursor_position();
-    //original_glyph = util::clamp(original_glyph, 0, int(mapping.size()));
-    //size_t original_cell = 0;
-    //for (size_t i = 0; i < mapping.size(); i++) {
-      //if (mapping[i] == original_glyph) {
-        //original_cell = (int)i;
-        //break;
-      //}
-    //}
-    //if (mapping[original_cell] != original_glyph) {
-      //original_cell = mapping.size();
-    //}
-    //const int target_cell =
-        //int(original_cell) + event.mouse().x - cursor_box_.x_min;
-    //int target_glyph = target_cell < (int)mapping.size() ? mapping[target_cell]
-                                                         //: (int)mapping.size();
-    //target_glyph = util::clamp(target_glyph, 0, GlyphCount(*content_));
-    //if (cursor_position() != target_glyph) {
-      //cursor_position() = target_glyph;
-      //option_->on_change();
-    //}
+    cursor_line = new_cursor_line;
+    cursor_column = new_cursor_column;
+    option_->on_change();
     return true;
   }
 
