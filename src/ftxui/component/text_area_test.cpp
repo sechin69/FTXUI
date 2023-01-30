@@ -295,54 +295,89 @@ TEST(TextAreaTest, MouseClick) {
 
   auto render = [&] {
     auto document = textarea->Render();
-    auto screen = Screen::Create(Dimension::Fixed(10), Dimension::Fixed(0));
+    auto screen = Screen::Create(Dimension::Fixed(10), Dimension::Fixed(3));
     Render(screen, document);
   };
   render();
+  EXPECT_EQ(option.cursor_line(), 2u);
+  EXPECT_EQ(option.cursor_column(), 0u);
 
   Mouse mouse;
   mouse.button = Mouse::Button::Left;
   mouse.motion = Mouse::Motion::Pressed;
-  mouse.x = 0;
-  mouse.y = 0;
   mouse.shift = false;
   mouse.meta = false;
   mouse.control = false;
 
   mouse.x = 0;
-  textarea->OnEvent(Event::Mouse("", mouse));
+  mouse.y = 0;
+  EXPECT_TRUE(textarea->OnEvent(Event::Mouse("", mouse)));
   render();
+  EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 0u);
 
   mouse.x = 2;
-  textarea->OnEvent(Event::Mouse("", mouse));
+  mouse.y = 0;
+  EXPECT_TRUE(textarea->OnEvent(Event::Mouse("", mouse)));
   render();
+  EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 2u);
 
   mouse.x = 2;
-  textarea->OnEvent(Event::Mouse("", mouse));
+  mouse.y = 0;
+  EXPECT_FALSE(textarea->OnEvent(Event::Mouse("", mouse)));
   render();
+  EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 2u);
 
   mouse.x = 1;
-  textarea->OnEvent(Event::Mouse("", mouse));
+  mouse.y = 0;
+  EXPECT_TRUE(textarea->OnEvent(Event::Mouse("", mouse)));
   render();
+  EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 1u);
 
   mouse.x = 3;
-  textarea->OnEvent(Event::Mouse("", mouse));
+  mouse.y = 0;
+  EXPECT_TRUE(textarea->OnEvent(Event::Mouse("", mouse)));
   render();
+  EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 3u);
 
   mouse.x = 4;
-  textarea->OnEvent(Event::Mouse("", mouse));
+  mouse.y = 0;
+  EXPECT_TRUE(textarea->OnEvent(Event::Mouse("", mouse)));
   render();
+  EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 4u);
 
   mouse.x = 5;
-  textarea->OnEvent(Event::Mouse("", mouse));
+  mouse.y = 0;
+  EXPECT_TRUE(textarea->OnEvent(Event::Mouse("", mouse)));
   render();
+  EXPECT_EQ(option.cursor_line(), 0u);
   EXPECT_EQ(option.cursor_column(), 4u);
+
+  mouse.x = 5;
+  mouse.y = 1;
+  EXPECT_TRUE(textarea->OnEvent(Event::Mouse("", mouse)));
+  render();
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 4u);
+
+  mouse.x = 1;
+  mouse.y = 1;
+  EXPECT_TRUE(textarea->OnEvent(Event::Mouse("", mouse)));
+  render();
+  EXPECT_EQ(option.cursor_line(), 1u);
+  EXPECT_EQ(option.cursor_column(), 1u);
+
+  mouse.x = 4;
+  mouse.y = 2;
+  EXPECT_TRUE(textarea->OnEvent(Event::Mouse("", mouse)));
+  render();
+  EXPECT_EQ(option.cursor_line(), 2u);
+  EXPECT_EQ(option.cursor_column(), 0u);
 }
 
 TEST(TextAreaTest, MouseClickComplex) {

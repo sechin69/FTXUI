@@ -14,7 +14,7 @@ int main(int argc, const char* argv[]) {
 
   std::string content_1;
   std::string content_2;
-  auto textarea_1 = TextArea(&content_1);
+  auto textarea_1 = TextArea(&content_1, {.placeholder = "coucou"});
   auto textarea_2 = TextArea(&content_2);
   int size = 50;
   auto layout = ResizableSplitLeft(textarea_1, textarea_2, &size);

@@ -84,6 +84,22 @@ class TextAreaBase : public ComponentBase {
 
   // Component implementation:
   Element Render() override {
+    const bool is_focused = Focused();
+    const auto focused =
+        (is_focused || hovered_) ? focusCursorBarBlinking : select;
+
+    // placeholder.
+    if (content_->empty()) {
+      auto element = text(option_->placeholder()) | dim | frame | reflect(box_);
+      if (is_focused) {
+        element |= focus;
+      }
+      if (hovered_ || is_focused) {
+        element |= inverted;
+      }
+      return element;
+    }
+
     Elements lines;
     std::vector<std::string> content_lines = Split(*content_);
 
@@ -99,10 +115,6 @@ class TextAreaBase : public ComponentBase {
                                     : empty_string;
       cursor_column = std::max(std::min(cursor_column, (int)line.size()), 0);
     }
-
-    const bool is_focused = Focused();
-    const auto focused =
-        (is_focused || hovered_) ? focusCursorBarBlinking : select;
 
     if (content_lines.empty()) {
       lines.push_back(text("") | focused);
@@ -236,15 +248,34 @@ class TextAreaBase : public ComponentBase {
       return true;
     }
 
-    if (event == Event::ArrowLeft && cursor_column > 0) {
-      cursor_column--;
-      return true;
+    if (event == Event::ArrowLeft) {
+      if (cursor_column > 0) {
+        cursor_column--;
+        return true;
+      }
+
+      if (cursor_line > 0) {
+        cursor_line--;
+        cursor_column = GlyphCount(content_lines[cursor_line]);
+        return true;
+      }
+
+      return false;
     }
 
-    if (event == Event::ArrowRight &&
-        cursor_column < (int)line.size()) {
-      cursor_column++;
-      return true;
+    if (event == Event::ArrowRight) {
+      if (cursor_column < (int)line.size()) {
+        cursor_column++;
+        return true;
+      }
+      
+      if (cursor_line < (int)content_lines.size() - 1) {
+        cursor_line++;
+        cursor_column= 0;
+        return true;
+      }
+
+      return false;
     }
 
     // CTRL + Arrow:
