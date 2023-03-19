@@ -4,13 +4,16 @@ Changelog
 current (development) 
 ---------------------
 
+### DOM
+- Improvement: Color::Interpolate() uses gamma correction.
+- Feature: Customize with gradient color effect. Add the following decorators:
+  - `colorgrad`
+  - `bgcolorgrad`
+
 4.0.0
 -----
 
 ### DOM
-- Feature: Customize with gradient color effect. Add the following decorators:
-  - `colorgrad`
-  - `bgcolorgrad`
 - Feature: more styles:
   - `strikethrough`
   - `underlinedDouble`
