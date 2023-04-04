@@ -150,19 +150,41 @@ Component Button(ConstStringRef label,
     }
 
     bool OnMouseEvent(Event event) {
-      mouse_hover_ =
-          box_.Contain(event.mouse().x, event.mouse().y) && CaptureMouse(event);
 
-      if (!mouse_hover_) {
-        return false;
-      }
+      if (event.screen_) {
+        mouse_hover_ = box_.Contain(event.mouse().x, event.mouse().y) &&
+                       CaptureMouse(event) &&
+                       (!event.screen_->GetCapturedComponent() || event.screen_->GetCapturedComponent() == this);
 
-      if (event.mouse().button == Mouse::Left &&
-          event.mouse().motion == Mouse::Pressed) {
-        TakeFocus();
-        OnClick();
-        return true;
-      }
+        if (!mouse_hover_) {
+          return false;
+        }
+        if (event.mouse().button == Mouse::Left) {
+          if (event.mouse().motion == Mouse::Pressed) {
+            bool result = event.screen_->SetCapturedComponent(this);
+            if (result) {
+              TakeFocus();
+            }
+            return result;
+          } else if (event.mouse().motion == Mouse::Released) {
+            if (event.screen_->UnsetCapturedComponent(this)) {
+                TakeFocus();
+                OnClick();
+                return true;            
+            }
+            return false;
+          }
+        
+        }
+      } 
+      //else {
+      //  if (event.mouse().button == Mouse::Left &&
+      //      event.mouse().motion == Mouse::Pressed) {
+      //    TakeFocus();
+      //    OnClick();
+      //    return true;
+      //  }      
+      //}
 
       return false;
     }

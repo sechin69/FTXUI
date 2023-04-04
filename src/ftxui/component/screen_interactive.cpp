@@ -618,6 +618,25 @@ void ScreenInteractive::RunOnce(Component component) {
   Draw(std::move(component));
 }
 
+bool ScreenInteractive::SetCapturedComponent(ComponentBase* comp) {
+  if (CapturedComponent) {
+    return false;
+  }
+  CapturedComponent = comp;
+  return true;
+}
+bool ScreenInteractive::UnsetCapturedComponent(ComponentBase* comp) {
+  if (CapturedComponent == comp) {
+    CapturedComponent = nullptr;
+    return true;
+  }
+  return false;
+}
+ComponentBase* ScreenInteractive::GetCapturedComponent() {
+  return CapturedComponent;
+}
+
+
 void ScreenInteractive::HandleTask(Component component, Task& task) {
   // clang-format off
   std::visit([&](auto&& arg) {
@@ -638,7 +657,15 @@ void ScreenInteractive::HandleTask(Component component, Task& task) {
 
       arg.screen_ = this;
       component->OnEvent(arg);
+
       frame_valid_ = false;
+
+      if (arg.is_mouse()) {
+        if (arg.mouse().button == Mouse::Left && arg.mouse().motion == Mouse::Released) {
+            CapturedComponent = nullptr;
+        }
+      }
+
       return;
     }
 

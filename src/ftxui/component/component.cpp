@@ -101,11 +101,11 @@ Element ComponentBase::Render() {
 /// true. If none returns true, return false.
 /// @ingroup component
 bool ComponentBase::OnEvent(Event event) {  // NOLINT
-  for (Component& child : children_) {      // NOLINT
-    if (child->OnEvent(event)) {
-      return true;
+    for (Component& child : children_) {      // NOLINT
+        if (child->OnEvent(event)) {
+          return true;
+        }
     }
-  }
   return false;
 }
 

@@ -51,6 +51,11 @@ class ScreenInteractive : public Screen {
   // temporarily uninstalled.
   Closure WithRestoredIO(Closure);
 
+  bool SetCapturedComponent(ComponentBase* comp);
+  bool UnsetCapturedComponent(ComponentBase* comp);
+  ComponentBase* GetCapturedComponent();
+
+
  private:
   void ExitNow();
 
@@ -103,6 +108,8 @@ class ScreenInteractive : public Screen {
   bool previous_frame_resized_ = false;
 
   bool frame_valid_ = false;
+
+  ComponentBase* CapturedComponent = nullptr;
 
   friend class Loop;
 
