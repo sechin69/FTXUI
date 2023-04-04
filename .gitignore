@@ -1,0 +1,23 @@
+﻿################################################################################
+# 이 .gitignore 파일은 Microsoft(R) Visual Studio에서 자동으로 만들어졌습니다.
+################################################################################
+
+/.vs
+/out/build/x64-Debug
+*.cmake
+/CMakeFiles
+/doc/CMakeFiles
+/doc/Makefile
+/examples/CMakeFiles
+/examples/component/CMakeFiles
+/examples/component/*
+!/examples/component/*.*
+!/examples/component/*/
+/examples/component/CMakeFiles
+/examples/dom/CMakeFiles
+/examples/dom/*
+!/examples/dom/*.*
+!/examples/dom/*/
+/examples/dom/CMakeFiles
+/examples/component/cmake_install.cmake
+/examples/dom/cmake_install.cmake

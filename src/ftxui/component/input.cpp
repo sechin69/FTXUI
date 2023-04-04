@@ -172,6 +172,14 @@ class InputBase : public ComponentBase {
 
     // Enter.
     if (event == Event::Return) {
+      auto parent = Parent();
+      while (parent && parent->GetComponentType() != ct::container) {
+        parent = parent->Parent();
+      }
+      if (parent) {
+        auto cantainer = static_cast<ContainerBase*>(parent);
+        cantainer->MoveSelector(+1);
+      }
       option_->on_enter();
       return true;
     }
