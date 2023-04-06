@@ -14,7 +14,7 @@ option(FTXUI_CLANG_TIDY "Execute clang-tidy" OFF)
 option(FTXUI_ENABLE_COVERAGE "Execute code coverage" OFF)
 
 set(CMAKE_CXX_COMPILER "/usr/local/bin/clang++")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2b -stdlib=libc++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20 -stdlib=libc++")
 
 set(FTXUI_MICROSOFT_TERMINAL_FALLBACK_HELP_TEXT "On windows, assume the \
 terminal used will be one of Microsoft and use a set of reasonnable fallback \
