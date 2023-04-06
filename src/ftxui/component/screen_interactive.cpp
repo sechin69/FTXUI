@@ -203,7 +203,7 @@ void RecordSignal(int signal) {
     case SIGABRT:
     case SIGFPE:
     case SIGILL:
-    case SIGINT:
+    //case SIGINT:
     case SIGSEGV:
     case SIGTERM:
       g_signal_exit_count++;
@@ -493,7 +493,8 @@ void ScreenInteractive::Install() {
 
   // Install signal handlers to restore the terminal state on exit. The default
   // signal handlers are restored on exit.
-  for (const int signal : {SIGTERM, SIGSEGV, SIGINT, SIGILL, SIGABRT, SIGFPE}) {
+  for (const int signal :
+       {SIGTERM, SIGSEGV, /*SIGINT, */ SIGILL, SIGABRT, SIGFPE}) {
     InstallSignalHandler(signal);
   }
 

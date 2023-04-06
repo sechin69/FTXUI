@@ -119,6 +119,7 @@ class ContainerBase : public ComponentBase {
       return true;
     }
 
+
     return EventHandler(event);
   }
 
@@ -193,32 +194,32 @@ class VerticalContainer : public ContainerBase {
 
   bool EventHandler(Event event) override {
     const int old_selected = *selector_;
-    if (event == Event::ArrowUp || event == Event::Character('k')) {
-      MoveSelector(-1);
-    }
-    if (event == Event::ArrowDown || event == Event::Character('j')) {
-      MoveSelector(+1);
-    }
-    if (event == Event::PageUp) {
-      for (int i = 0; i < box_.y_max - box_.y_min; ++i) {
-        MoveSelector(-1);
-      }
-    }
-    if (event == Event::PageDown) {
-      for (int i = 0; i < box_.y_max - box_.y_min; ++i) {
-        MoveSelector(1);
-      }
-    }
-    if (event == Event::Home) {
-      for (size_t i = 0; i < children_.size(); ++i) {
-        MoveSelector(-1);
-      }
-    }
-    if (event == Event::End) {
-      for (size_t i = 0; i < children_.size(); ++i) {
-        MoveSelector(1);
-      }
-    }
+    //if (event == Event::ArrowUp || event == Event::Character('k')) {
+    //  MoveSelector(-1);
+    //}
+    //if (event == Event::ArrowDown || event == Event::Character('j')) {
+    //  MoveSelector(+1);
+    //}
+    //if (event == Event::PageUp) {
+    //  for (int i = 0; i < box_.y_max - box_.y_min; ++i) {
+    //    MoveSelector(-1);
+    //  }
+    //}
+    //if (event == Event::PageDown) {
+    //  for (int i = 0; i < box_.y_max - box_.y_min; ++i) {
+    //    MoveSelector(1);
+    //  }
+    //}
+    //if (event == Event::Home) {
+    //  for (size_t i = 0; i < children_.size(); ++i) {
+    //    MoveSelector(-1);
+    //  }
+    //}
+    //if (event == Event::End) {
+    //  for (size_t i = 0; i < children_.size(); ++i) {
+    //    MoveSelector(1);
+    //  }
+    //}
     if (event == Event::Tab) {
       MoveSelectorWrap(+1);
     }
@@ -235,12 +236,17 @@ class VerticalContainer : public ContainerBase {
       return true;
     }
 
-    if (event.mouse().button != Mouse::WheelUp &&
-        event.mouse().button != Mouse::WheelDown) {
+    if (!box_.Contain(event.mouse().x, event.mouse().y)) {
       return false;
     }
 
-    if (!box_.Contain(event.mouse().x, event.mouse().y)) {
+    if (event.mouse().button == Mouse::Left &&
+        event.mouse().motion == Mouse::Pressed) {
+      TakeFocus();
+    }
+
+    if (event.mouse().button != Mouse::WheelUp &&
+        event.mouse().button != Mouse::WheelDown) {
       return false;
     }
 
@@ -275,12 +281,12 @@ class HorizontalContainer : public ContainerBase {
 
   bool EventHandler(Event event) override {
     const int old_selected = *selector_;
-    if (event == Event::ArrowLeft || event == Event::Character('h')) {
-      MoveSelector(-1);
-    }
-    if (event == Event::ArrowRight || event == Event::Character('l')) {
-      MoveSelector(+1);
-    }
+    //if (event == Event::ArrowLeft || event == Event::Character('h')) {
+    //  MoveSelector(-1);
+    //}
+    //if (event == Event::ArrowRight || event == Event::Character('l')) {
+    //  MoveSelector(+1);
+    //}
     if (event == Event::Tab) {
       MoveSelectorWrap(+1);
     }
